@@ -1,252 +1,252 @@
-//#include <opencv2/opencv.hpp>
-//#include <cmath>
-//#include <filesystem>
-//#include <iostream>
-//#include <string>
-//#include <vector>
-//
-//using namespace cv;
-//using namespace std;
-//namespace fs = std::filesystem;
-//
-//static bool detectBoard(const Mat& gray, const Size& boardSize,
-//    vector<Point2f>& corners, bool exhaustive = false)
-//{
-//    corners.clear();
-//    int flags = CALIB_CB_NORMALIZE_IMAGE;
-//    if (exhaustive) flags |= CALIB_CB_EXHAUSTIVE | CALIB_CB_ACCURACY;//ÕâÀïÎªÁË¸ü×¼Ñ¡ÔñÁË½ÏÂıµÄ¼ì²âÄ£Ê½
-//    // OpenCV Ìá¹©µÄÑÇÏñËØ¼¶ÆåÅÌ¸ñ¼ì²âº¯Êı findChessboardCornersSB
-//    const bool found = findChessboardCornersSB(gray, boardSize, corners, flags);
-//    return found && corners.size() == static_cast<size_t>(boardSize.area());
-//}
-//
-//int main()
-//{
-//    //ÉãÏñÍ·³õÊ¼»¯ºÍÊä³öÄ¿Â¼
-//    const int cameraIndex = 0;
-//    const Size boardSize(9, 6);
-//    const float squareSizeMm = 16.0f;//ÊÖ¶¯²âÁ¿ÆåÅÌ¸ñ·½¸ñ±ß³¤
-//    const size_t minViews = 15;
-//
-//    try
-//    {
-//        VideoCapture cap(cameraIndex);
-//        if (!cap.isOpened())
-//        {
-//            cerr << "ÎŞ·¨´ò¿ªÉãÏñÍ·\n";
-//            return 1;
-//        }
-//
-//        // ±£³ÖÉãÏñÍ·µÄµ±Ç°·Ö±æÂÊ£¬Ê¹ÓÃÏàÍ¬µÄ·Ö±æÂÊ½øĞĞ²â¾à
-//        const fs::path runDir = fs::current_path() /
-//            ("calibration_" + to_string(getTickCount()));//Êä³öÄ¿Â¼ÓÃÊ±¼ä´ÁÃüÃû£¬±ÜÃâ¸²¸Ç
-//        fs::create_directories(runDir);//´´½¨Êä³öÄ¿Â¼
-//
-//        cout << "Êä³öÄ¿Â¼: " << runDir << '\n'
-//            << "ÆåÅÌ¸ñ: 9 x 6 ¸öÄÚ½Çµã; ·½¸ñ±ß³¤: " << squareSizeMm << " mm.\n"
-//            << "S: ¼ì²â²¢±£´æÓĞĞ§ÊÓÍ¼¡£R: ËæÊ±±£´æÔ­Ê¼Õï¶ÏÍ¼Ïñ¡£\n"
-//            << "C: ÊÕ¼¯ÖÁÉÙ 15 ¸ö²»Í¬ÊÓ½Çºó¿ªÊ¼±ê¶¨¡£\n"
-//            << "Esc: ÍË³ö¡£ÅÄÉã¼äÏ¶ÇëÒÆ¶¯²¢ÇãĞ±ÆåÅÌ¸ñ¡£\n";
-//
-//        // ³õÊ¼»¯×´Ì¬±äÁ¿
-//        vector<vector<Point2f>> imagePoints;
-//        Size imageSize;//Í¼Ïñ·Ö±æÂÊ
-//        string status = "ÏÔÊ¾Õû¸öÆåÅÌ£¬°üÀ¨Æä°×É«±ß¿ò¡£";//µ±Ç°ÌáÊ¾ÎÄ×Ö
-//        int debugImageCount = 0;
-//        Mat frame;//µ±Ç°Ö¡µÄ»º³åÇø
-//
-//        // Ö÷Ñ­»·
-//        while (true)
-//        {
-//            if (!cap.read(frame) || frame.empty())
-//            {
-//                cerr << "Î´ÊÕµ½µ±Ç°Ö¡.\n";
-//                return 1;
-//            }
-//            if (imageSize.empty())
-//            {
-//                imageSize = frame.size();
-//                cout << "Êµ¼Ê·Ö±æÂÊ: " << imageSize.width << " x "
-//                    << imageSize.height << '\n';
-//            }
-//            if (frame.size() != imageSize)
-//            {
-//                cerr << "·Ö±æÂÊÒÑ¸ü¸Ä£¬ÇëÔÚ¹Ì¶¨·Ö±æÂÊÏÂÖØĞÂĞ£×¼¡£\n";
-//                return 1;
-//            }
-//
-//            //²É¼¯ÊÓÍ¼
-//            Mat gray, preview = frame.clone();
-//            cvtColor(frame, gray, COLOR_BGR2GRAY);
-//            
-//            vector<Point2f> corners;
-//            bool found = detectBoard(gray, boardSize, corners);
-//            if (found)
-//            {
-//                // ÔÚÔ¤ÀÀÍ¼ÉÏÏÔÊ¾×´Ì¬ĞÅÏ¢
-//                drawChessboardCorners(preview, boardSize, corners, true);
-//            }
-//
-//            // ÏÔÊ¾ÓÚÒ³Ãæ¶¥²¿
-//            const string top = string(found ? "FOUND" : "NOT FOUND") + " | views: " +
-//                to_string(imagePoints.size()) + " | S: save R: raw C: calibrate Esc: exit";
-//            // ÏÔÊ¾µ±Ç°×´Ì¬
-//            putText(preview, top, Point(10, 25), FONT_HERSHEY_SIMPLEX, 0.5,
-//                found ? Scalar(0, 255, 0) : Scalar(0, 180, 255), 1, LINE_AA);
-//            putText(preview, status, Point(10, 50), FONT_HERSHEY_SIMPLEX, 0.45,
-//                Scalar(0, 255, 255), 1, LINE_AA);
-//            imshow("Camera calibration", preview);
-//
-//            const int key = waitKey(1) & 0xff;
-//            if (key == 27) break;
-//
-//            // °´ R ±£´æÔ­Ê¼Í¼Ïñ£¬Ô­Ê¼Í¼Ïñ½öÓÃÓÚÅÅ²éÎÊÌâ£¬²»²ÎÓë±ê¶¨
-//            if (key == 'r' || key == 'R')
-//            {
-//                const fs::path debugPath = runDir /
-//                    ("debug_" + to_string(++debugImageCount) + ".png");
-//                if (!imwrite(debugPath.string(), frame))
-//                {
-//                    cerr << "ÎŞ·¨±£´æÔ­Ê¼Í¼Ïñ: " << debugPath << '\n';
-//                    status = "Ô­Ê¼Í¼ÏñĞ´ÈëÊ§°Ü£¬Çë²é¿´¿ØÖÆÌ¨";
-//                    continue;
-//                }
-//                cout << "ÒÑ±£´æÔ­Ê¼Õï¶ÏÍ¼Ïñ£¨²»×÷Îª±ê¶¨ÊÓÍ¼£©: "
-//                    << debugPath << '\n';
-//                status = "Ô­Ê¼Í¼ÏñÒÑ±£´æ£¬Â·¾¶¼û¿ØÖÆÌ¨£¬²»¼ÆÈëÊÓÍ¼Êı";
-//            }
-//
-//            //°´ S ±£´æÊÓÍ¼
-//            if (key == 's' || key == 'S')
-//            {
-//                // ÆÕÍ¨Ä£Ê½Ã»¼ì²âµ½£¬³¢ÊÔ¸üÂıµÄÉî¶È¼ì²â
-//                if (!found)
-//                {
-//                    cout << "ÕıÔÚ¶Ôµ±Ç°Ö¡³¢ÊÔ¸üÉîÈëµÄ¼ì²â...\n";
-//                    found = detectBoard(gray, boardSize, corners, true);
-//                }
-//                if (!found)
-//                {
-//                    status = "Î´¼ì²âµ½ÍêÕûµÄ 9x6 ÆåÅÌ¸ñ¡£°´ R ±£´æÕï¶ÏÍ¼Ïñ";
-//                    cout << "Î´±£´æÎª±ê¶¨ÊÓÍ¼£ºÎ´¼ì²âµ½ 54 ¸öÄÚ½Çµã\n"
-//                        << "Çë¼ì²éÆåÅÌ¸ñÊÇ·ñÍêÕû¿É¼û¡¢°×É«±ß¾à¡¢¶Ô½¹Çé¿ö£¬ÒÔ¼°ÊÇ·ñÎª 10x7 ¸ö·½¸ñ\n"
-//                        << "°´ R ±£´æÔ­Ê¼ÉãÏñÍ·Í¼ÏñÒÔ±ãÅÅ²é\n";
-//                    continue;
-//                }
-//
-//                // ÖØ¸´ÊÓÍ¼¼ì²é£»ÊÓÍ¼¶àÑùĞÔĞèÒª×Ô¼º°ÑÎÕ
-//                bool duplicate = false;
-//                for (const auto& oldCorners : imagePoints)
-//                {
-//                    const double rmsMotion = norm(corners, oldCorners, NORM_L2) /
-//                        sqrt(static_cast<double>(corners.size()));
-//                    if (rmsMotion < 3.0) { duplicate = true; break; }
-//                }
-//                if (duplicate)
-//                {
-//                    status = "ÊÓÍ¼¹ıÓÚÏàËÆ£ºÇëÒÆ¶¯»òÇãĞ±ÆåÅÌ¸ñºóÔÙ±£´æ";
-//                    cout << "Î´±£´æ£º¸ÃÊÓÍ¼ÓëÖ®Ç°µÄÊÓÍ¼¹ıÓÚÏàËÆ\n";
-//                    continue;
-//                }
-//                // ±£´æÊÓÍ¼Í¼Ïñ
-//                const fs::path shot = runDir /
-//                    ("view_" + to_string(imagePoints.size() + 1) + ".png");
-//                if (!imwrite(shot.string(), frame))
-//                {
-//                    cerr << "ÎŞ·¨±£´æÍ¼Ïñ: " << shot << '\n';
-//                    return 1;
-//                }
-//                // ¼ÇÂ¼½Çµã×ø±ê
-//                imagePoints.push_back(corners);
-//                status = "ÒÑ±£´æ¡£Çë¸Ä±äÆåÅÌ¸ñÎ»ÖÃ¡¢¾àÀëºÍÇãĞ±½Ç¶È";
-//                cout << "ÒÑ±£´æÊÓÍ¼ " << imagePoints.size() << '\n';
-//            }
-//
-//            //°´ C ±ê¶¨
-//            if (key == 'c' || key == 'C')
-//            {
-//                if (imagePoints.size() < minViews)
-//                {
-//                    status = "ÇëÏÈ²É¼¯ÖÁÉÙ 15 ¸ö²»Í¬½Ç¶È¡¢ÇåÎúµÄÊÓÍ¼";
-//                    cout << "ĞèÒªÖÁÉÙ 15 ¸öÓĞĞ§ÊÓÍ¼£»µ±Ç°Îª " << imagePoints.size()
-//                        << " ¸ö¡£Ô­Ê¼Õï¶ÏÍ¼Ïñ²»¼ÆÈë\n";
-//                    continue;
-//                }
-//
-//                // ¹¹ÔìÆåÅÌ¸ñÉÏÃ¿¸öÄÚ½ÇµãµÄÕæÊµÈıÎ¬×ø±ê
-//                // ÆåÅÌ¸ñÊÇÆ½Ãæ£¬Z ×ø±êÈ«Îª 0
-//                vector<Point3f> boardPoints;
-//                for (int row = 0; row < boardSize.height; ++row)
-//                    for (int col = 0; col < boardSize.width; ++col)
-//                        boardPoints.emplace_back(col * squareSizeMm, row * squareSizeMm, 0.0f);
-//                
-//                // Ã¿¸öÊÓÍ¼¹²ÓÃÍ¬Ò»×éÕæÊµ×ø±ê
-//                vector<vector<Point3f>> objectPoints(imagePoints.size(), boardPoints);
-//                Mat cameraMatrix, distCoeffs;
-//                vector<Mat> rvecs, tvecs;
-//                cout << "Calibrating...\n";
-//
-//                // ºËĞÄ±ê¶¨º¯Êı£¬·µ»ØÖØÍ¶Ó°Îó²îµÄ RMS
-//                const double rms = calibrateCamera(objectPoints, imagePoints, imageSize,
-//                    cameraMatrix, distCoeffs, rvecs, tvecs);
-//                if (!isfinite(rms) || !checkRange(cameraMatrix) || !checkRange(distCoeffs) ||
-//                    cameraMatrix.at<double>(0, 0) <= 0 || cameraMatrix.at<double>(1, 1) <= 0)
-//                {
-//                    status = "Invalid result: recollect varied views and restart.";
-//                    cerr << status << '\n';
-//                    continue;
-//                }
-//
-//                //¼ÆËãÃ¿ÕÅÊÓÍ¼µÄÖØÍ¶Ó°Îó²î
-//                vector<double> perViewErrors;
-//                for (size_t i = 0; i < imagePoints.size(); ++i)
-//                {
-//                    vector<Point2f> projected;
-//                    projectPoints(boardPoints, rvecs[i], tvecs[i],
-//                        cameraMatrix, distCoeffs, projected);
-//                    const double error = norm(imagePoints[i], projected, NORM_L2) /
-//                        sqrt(static_cast<double>(projected.size()));
-//                    perViewErrors.push_back(error);
-//                    cout << "View " << i + 1 << ": " << error << " px RMS\n";
-//                }
-//
-//                // ±£´æ±ê¶¨½á¹ûµ½ YAML ÎÄ¼ş
-//                const fs::path output = runDir / "camera.yml";
-//                FileStorage file(output.string(), FileStorage::WRITE);
-//                if (!file.isOpened())
-//                {
-//                    cerr << "Cannot write: " << output << '\n';
-//                    return 1;
-//                }
-//                file << "camera_index" << cameraIndex;
-//                file << "image_width" << imageSize.width << "image_height" << imageSize.height;
-//                file << "board_columns" << boardSize.width << "board_rows" << boardSize.height;
-//                file << "square_size_mm" << squareSizeMm;
-//                file << "view_count" << static_cast<int>(imagePoints.size());
-//                file << "camera_matrix" << cameraMatrix << "distortion_coefficients" << distCoeffs;
-//                file << "rms_reprojection_error_px" << rms << "per_view_rms_px" << perViewErrors;
-//                file << "image_points" << "[";
-//                for (const auto& points : imagePoints) file << points;
-//                file << "]";
-//                file.release();
-//
-//                cout << "\nÏà»úÄÚ²Î¾ØÕó:\n" << cameraMatrix
-//                    << "\n»û±äÏµÊı:\n" << distCoeffs
-//                    << "\nÕûÌåÖØÍ¶Ó° RMS: " << rms << " px"
-//                    << "\nÒÑ±£´æÖÁ: " << output << '\n'
-//                    << "×¢Òâ£ºRMS µÍ²¢²»ÄÜÖ¤Ã÷ÕæÊµÊÀ½ç²â¾àÒ»¶¨×¼È·¡£\n";
-//
-//                // RMS > 1 ÏñËØÍ¨³£ÌáÊ¾ÓĞÄ£ºı»ò°å×Ó²»Æ½Õû
-//                if (rms > 1.0)
-//                    cout << "RMS ´óÓÚ 1 ÏñËØ£ºÇë¼ì²éÄ£ºı¡¢ÆåÅÌ¸ñÆ½Õû¶ÈºÍ¸÷ÊÓÍ¼Îó²î¡£\n";
-//            }
-//        }
-//        destroyAllWindows();
-//        return 0;
-//    }
-//    catch (const exception& e)
-//    {
-//        cerr << "Error: " << e.what() << '\n';
-//        return 1;
-//    }
-//}
+#include <opencv2/opencv.hpp>
+#include <cmath>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace cv;
+using namespace std;
+namespace fs = std::filesystem;
+
+static bool detectBoard(const Mat& gray, const Size& boardSize,
+    vector<Point2f>& corners, bool exhaustive = false)
+{
+    corners.clear();
+    int flags = CALIB_CB_NORMALIZE_IMAGE;
+    if (exhaustive) flags |= CALIB_CB_EXHAUSTIVE | CALIB_CB_ACCURACY;//è¿™é‡Œä¸ºäº†æ›´å‡†é€‰æ‹©äº†è¾ƒæ…¢çš„æ£€æµ‹æ¨¡å¼
+    // OpenCV æä¾›çš„äºšåƒç´ çº§æ£‹ç›˜æ ¼æ£€æµ‹å‡½æ•° findChessboardCornersSB
+    const bool found = findChessboardCornersSB(gray, boardSize, corners, flags);
+    return found && corners.size() == static_cast<size_t>(boardSize.area());
+}
+
+int main()
+{
+    //æ‘„åƒå¤´åˆå§‹åŒ–å’Œè¾“å‡ºç›®å½•
+    const int cameraIndex = 0;
+    const Size boardSize(9, 6);
+    const float squareSizeMm = 16.0f;//æ‰‹åŠ¨æµ‹é‡æ£‹ç›˜æ ¼æ–¹æ ¼è¾¹é•¿
+    const size_t minViews = 15;
+
+    try
+    {
+        VideoCapture cap(cameraIndex);
+        if (!cap.isOpened())
+        {
+            cerr << "æ— æ³•æ‰“å¼€æ‘„åƒå¤´\n";
+            return 1;
+        }
+
+        // ä¿æŒæ‘„åƒå¤´çš„å½“å‰åˆ†è¾¨ç‡ï¼Œä½¿ç”¨ç›¸åŒçš„åˆ†è¾¨ç‡è¿›è¡Œæµ‹è·
+        const fs::path runDir = fs::current_path() /
+            ("calibration_" + to_string(getTickCount()));//è¾“å‡ºç›®å½•ç”¨æ—¶é—´æˆ³å‘½åï¼Œé¿å…è¦†ç›–
+        fs::create_directories(runDir);//åˆ›å»ºè¾“å‡ºç›®å½•
+
+        cout << "è¾“å‡ºç›®å½•: " << runDir << '\n'
+            << "æ£‹ç›˜æ ¼: 9 x 6 ä¸ªå†…è§’ç‚¹; æ–¹æ ¼è¾¹é•¿: " << squareSizeMm << " mm.\n"
+            << "S: æ£€æµ‹å¹¶ä¿å­˜æœ‰æ•ˆè§†å›¾ã€‚R: éšæ—¶ä¿å­˜åŸå§‹è¯Šæ–­å›¾åƒã€‚\n"
+            << "C: æ”¶é›†è‡³å°‘ 15 ä¸ªä¸åŒè§†è§’åå¼€å§‹æ ‡å®šã€‚\n"
+            << "Esc: é€€å‡ºã€‚æ‹æ‘„é—´éš™è¯·ç§»åŠ¨å¹¶å€¾æ–œæ£‹ç›˜æ ¼ã€‚\n";
+
+        // åˆå§‹åŒ–çŠ¶æ€å˜é‡
+        vector<vector<Point2f>> imagePoints;
+        Size imageSize;//å›¾åƒåˆ†è¾¨ç‡
+        string status = "æ˜¾ç¤ºæ•´ä¸ªæ£‹ç›˜ï¼ŒåŒ…æ‹¬å…¶ç™½è‰²è¾¹æ¡†ã€‚";//å½“å‰æç¤ºæ–‡å­—
+        int debugImageCount = 0;
+        Mat frame;//å½“å‰å¸§çš„ç¼“å†²åŒº
+
+        // ä¸»å¾ªç¯
+        while (true)
+        {
+            if (!cap.read(frame) || frame.empty())
+            {
+                cerr << "æœªæ”¶åˆ°å½“å‰å¸§.\n";
+                return 1;
+            }
+            if (imageSize.empty())
+            {
+                imageSize = frame.size();
+                cout << "å®é™…åˆ†è¾¨ç‡: " << imageSize.width << " x "
+                    << imageSize.height << '\n';
+            }
+            if (frame.size() != imageSize)
+            {
+                cerr << "åˆ†è¾¨ç‡å·²æ›´æ”¹ï¼Œè¯·åœ¨å›ºå®šåˆ†è¾¨ç‡ä¸‹é‡æ–°æ ¡å‡†ã€‚\n";
+                return 1;
+            }
+
+            //é‡‡é›†è§†å›¾
+            Mat gray, preview = frame.clone();
+            cvtColor(frame, gray, COLOR_BGR2GRAY);
+            
+            vector<Point2f> corners;
+            bool found = detectBoard(gray, boardSize, corners);
+            if (found)
+            {
+                // åœ¨é¢„è§ˆå›¾ä¸Šæ˜¾ç¤ºçŠ¶æ€ä¿¡æ¯
+                drawChessboardCorners(preview, boardSize, corners, true);
+            }
+
+            // æ˜¾ç¤ºäºé¡µé¢é¡¶éƒ¨
+            const string top = string(found ? "FOUND" : "NOT FOUND") + " | views: " +
+                to_string(imagePoints.size()) + " | S: save R: raw C: calibrate Esc: exit";
+            // æ˜¾ç¤ºå½“å‰çŠ¶æ€
+            putText(preview, top, Point(10, 25), FONT_HERSHEY_SIMPLEX, 0.5,
+                found ? Scalar(0, 255, 0) : Scalar(0, 180, 255), 1, LINE_AA);
+            putText(preview, status, Point(10, 50), FONT_HERSHEY_SIMPLEX, 0.45,
+                Scalar(0, 255, 255), 1, LINE_AA);
+            imshow("Camera calibration", preview);
+
+            const int key = waitKey(1) & 0xff;
+            if (key == 27) break;
+
+            // æŒ‰ R ä¿å­˜åŸå§‹å›¾åƒï¼ŒåŸå§‹å›¾åƒä»…ç”¨äºæ’æŸ¥é—®é¢˜ï¼Œä¸å‚ä¸æ ‡å®š
+            if (key == 'r' || key == 'R')
+            {
+                const fs::path debugPath = runDir /
+                    ("debug_" + to_string(++debugImageCount) + ".png");
+                if (!imwrite(debugPath.string(), frame))
+                {
+                    cerr << "æ— æ³•ä¿å­˜åŸå§‹å›¾åƒ: " << debugPath << '\n';
+                    status = "åŸå§‹å›¾åƒå†™å…¥å¤±è´¥ï¼Œè¯·æŸ¥çœ‹æ§åˆ¶å°";
+                    continue;
+                }
+                cout << "å·²ä¿å­˜åŸå§‹è¯Šæ–­å›¾åƒï¼ˆä¸ä½œä¸ºæ ‡å®šè§†å›¾ï¼‰: "
+                    << debugPath << '\n';
+                status = "åŸå§‹å›¾åƒå·²ä¿å­˜ï¼Œè·¯å¾„è§æ§åˆ¶å°ï¼Œä¸è®¡å…¥è§†å›¾æ•°";
+            }
+
+            //æŒ‰ S ä¿å­˜è§†å›¾
+            if (key == 's' || key == 'S')
+            {
+                // æ™®é€šæ¨¡å¼æ²¡æ£€æµ‹åˆ°ï¼Œå°è¯•æ›´æ…¢çš„æ·±åº¦æ£€æµ‹
+                if (!found)
+                {
+                    cout << "æ­£åœ¨å¯¹å½“å‰å¸§å°è¯•æ›´æ·±å…¥çš„æ£€æµ‹...\n";
+                    found = detectBoard(gray, boardSize, corners, true);
+                }
+                if (!found)
+                {
+                    status = "æœªæ£€æµ‹åˆ°å®Œæ•´çš„ 9x6 æ£‹ç›˜æ ¼ã€‚æŒ‰ R ä¿å­˜è¯Šæ–­å›¾åƒ";
+                    cout << "æœªä¿å­˜ä¸ºæ ‡å®šè§†å›¾ï¼šæœªæ£€æµ‹åˆ° 54 ä¸ªå†…è§’ç‚¹\n"
+                        << "è¯·æ£€æŸ¥æ£‹ç›˜æ ¼æ˜¯å¦å®Œæ•´å¯è§ã€ç™½è‰²è¾¹è·ã€å¯¹ç„¦æƒ…å†µï¼Œä»¥åŠæ˜¯å¦ä¸º 10x7 ä¸ªæ–¹æ ¼\n"
+                        << "æŒ‰ R ä¿å­˜åŸå§‹æ‘„åƒå¤´å›¾åƒä»¥ä¾¿æ’æŸ¥\n";
+                    continue;
+                }
+
+                // é‡å¤è§†å›¾æ£€æŸ¥ï¼›è§†å›¾å¤šæ ·æ€§éœ€è¦è‡ªå·±æŠŠæ¡
+                bool duplicate = false;
+                for (const auto& oldCorners : imagePoints)
+                {
+                    const double rmsMotion = norm(corners, oldCorners, NORM_L2) /
+                        sqrt(static_cast<double>(corners.size()));
+                    if (rmsMotion < 3.0) { duplicate = true; break; }
+                }
+                if (duplicate)
+                {
+                    status = "è§†å›¾è¿‡äºç›¸ä¼¼ï¼šè¯·ç§»åŠ¨æˆ–å€¾æ–œæ£‹ç›˜æ ¼åå†ä¿å­˜";
+                    cout << "æœªä¿å­˜ï¼šè¯¥è§†å›¾ä¸ä¹‹å‰çš„è§†å›¾è¿‡äºç›¸ä¼¼\n";
+                    continue;
+                }
+                // ä¿å­˜è§†å›¾å›¾åƒ
+                const fs::path shot = runDir /
+                    ("view_" + to_string(imagePoints.size() + 1) + ".png");
+                if (!imwrite(shot.string(), frame))
+                {
+                    cerr << "æ— æ³•ä¿å­˜å›¾åƒ: " << shot << '\n';
+                    return 1;
+                }
+                // è®°å½•è§’ç‚¹åæ ‡
+                imagePoints.push_back(corners);
+                status = "å·²ä¿å­˜ã€‚è¯·æ”¹å˜æ£‹ç›˜æ ¼ä½ç½®ã€è·ç¦»å’Œå€¾æ–œè§’åº¦";
+                cout << "å·²ä¿å­˜è§†å›¾ " << imagePoints.size() << '\n';
+            }
+
+            //æŒ‰ C æ ‡å®š
+            if (key == 'c' || key == 'C')
+            {
+                if (imagePoints.size() < minViews)
+                {
+                    status = "è¯·å…ˆé‡‡é›†è‡³å°‘ 15 ä¸ªä¸åŒè§’åº¦ã€æ¸…æ™°çš„è§†å›¾";
+                    cout << "éœ€è¦è‡³å°‘ 15 ä¸ªæœ‰æ•ˆè§†å›¾ï¼›å½“å‰ä¸º " << imagePoints.size()
+                        << " ä¸ªã€‚åŸå§‹è¯Šæ–­å›¾åƒä¸è®¡å…¥\n";
+                    continue;
+                }
+
+                // æ„é€ æ£‹ç›˜æ ¼ä¸Šæ¯ä¸ªå†…è§’ç‚¹çš„çœŸå®ä¸‰ç»´åæ ‡
+                // æ£‹ç›˜æ ¼æ˜¯å¹³é¢ï¼ŒZ åæ ‡å…¨ä¸º 0
+                vector<Point3f> boardPoints;
+                for (int row = 0; row < boardSize.height; ++row)
+                    for (int col = 0; col < boardSize.width; ++col)
+                        boardPoints.emplace_back(col * squareSizeMm, row * squareSizeMm, 0.0f);
+                
+                // æ¯ä¸ªè§†å›¾å…±ç”¨åŒä¸€ç»„çœŸå®åæ ‡
+                vector<vector<Point3f>> objectPoints(imagePoints.size(), boardPoints);
+                Mat cameraMatrix, distCoeffs;
+                vector<Mat> rvecs, tvecs;
+                cout << "Calibrating...\n";
+
+                // æ ¸å¿ƒæ ‡å®šå‡½æ•°ï¼Œè¿”å›é‡æŠ•å½±è¯¯å·®çš„ RMS
+                const double rms = calibrateCamera(objectPoints, imagePoints, imageSize,
+                    cameraMatrix, distCoeffs, rvecs, tvecs);
+                if (!isfinite(rms) || !checkRange(cameraMatrix) || !checkRange(distCoeffs) ||
+                    cameraMatrix.at<double>(0, 0) <= 0 || cameraMatrix.at<double>(1, 1) <= 0)
+                {
+                    status = "Invalid result: recollect varied views and restart.";
+                    cerr << status << '\n';
+                    continue;
+                }
+
+                //è®¡ç®—æ¯å¼ è§†å›¾çš„é‡æŠ•å½±è¯¯å·®
+                vector<double> perViewErrors;
+                for (size_t i = 0; i < imagePoints.size(); ++i)
+                {
+                    vector<Point2f> projected;
+                    projectPoints(boardPoints, rvecs[i], tvecs[i],
+                        cameraMatrix, distCoeffs, projected);
+                    const double error = norm(imagePoints[i], projected, NORM_L2) /
+                        sqrt(static_cast<double>(projected.size()));
+                    perViewErrors.push_back(error);
+                    cout << "View " << i + 1 << ": " << error << " px RMS\n";
+                }
+
+                // ä¿å­˜æ ‡å®šç»“æœåˆ° YAML æ–‡ä»¶
+                const fs::path output = runDir / "camera.yml";
+                FileStorage file(output.string(), FileStorage::WRITE);
+                if (!file.isOpened())
+                {
+                    cerr << "Cannot write: " << output << '\n';
+                    return 1;
+                }
+                file << "camera_index" << cameraIndex;
+                file << "image_width" << imageSize.width << "image_height" << imageSize.height;
+                file << "board_columns" << boardSize.width << "board_rows" << boardSize.height;
+                file << "square_size_mm" << squareSizeMm;
+                file << "view_count" << static_cast<int>(imagePoints.size());
+                file << "camera_matrix" << cameraMatrix << "distortion_coefficients" << distCoeffs;
+                file << "rms_reprojection_error_px" << rms << "per_view_rms_px" << perViewErrors;
+                file << "image_points" << "[";
+                for (const auto& points : imagePoints) file << points;
+                file << "]";
+                file.release();
+
+                cout << "\nç›¸æœºå†…å‚çŸ©é˜µ:\n" << cameraMatrix
+                    << "\nç•¸å˜ç³»æ•°:\n" << distCoeffs
+                    << "\næ•´ä½“é‡æŠ•å½± RMS: " << rms << " px"
+                    << "\nå·²ä¿å­˜è‡³: " << output << '\n'
+                    << "æ³¨æ„ï¼šRMS ä½å¹¶ä¸èƒ½è¯æ˜çœŸå®ä¸–ç•Œæµ‹è·ä¸€å®šå‡†ç¡®ã€‚\n";
+
+                // RMS > 1 åƒç´ é€šå¸¸æç¤ºæœ‰æ¨¡ç³Šæˆ–æ¿å­ä¸å¹³æ•´
+                if (rms > 1.0)
+                    cout << "RMS å¤§äº 1 åƒç´ ï¼šè¯·æ£€æŸ¥æ¨¡ç³Šã€æ£‹ç›˜æ ¼å¹³æ•´åº¦å’Œå„è§†å›¾è¯¯å·®ã€‚\n";
+            }
+        }
+        destroyAllWindows();
+        return 0;
+    }
+    catch (const exception& e)
+    {
+        cerr << "Error: " << e.what() << '\n';
+        return 1;
+    }
+}
